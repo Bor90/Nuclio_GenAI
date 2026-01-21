@@ -9,9 +9,8 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 
 # # ---------- Paths ----------
 # APP_DIR    = os.path.dirname(__file__)
-# ASSETS_DIR = os.path.join(APP_DIR, "assets")
-# CORPUS_JSON = os.path.join(ASSETS_DIR, "corpus.json")
-# FAISS_MAIN  = os.path.join(ASSETS_DIR, "faiss_ip_768.index")
+# CORPUS_JSON = os.path.join(APP_DIR, "corpus.json")
+# FAISS_MAIN  = os.path.join(APP_DIR, "faiss_ip_768.index")
 
 # # ---------- Load corpus ----------
 # with open(CORPUS_JSON, "r", encoding="utf-8") as f:
@@ -28,18 +27,20 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 # ---------- Model ----------
 model = SentenceTransformer("google/embeddinggemma-300m", token=HF_TOKEN)
 
-# ---------- Display Similarity ----------
+# ---------- 1. Display Similarity ----------
 def do_similarity(text_a: str, text_b: str) -> float:
-    a = model.encode_document([text_a], normalize_embeddings=True, convert_to_numpy=True)[0]
-    b = model.encode_document([text_b], normalize_embeddings=True, convert_to_numpy=True)[0]
-    return float(np.dot(a, b))
+    ##################################
+    # INSERT YOUR CODE HERE
+    ##################################
+    return float(similarity_score)
 
-# # ---------- Semantic Search ----------
+# # ---------- 2. Semantic Search ----------
 # def do_search(query: str, top_k: int = 5) -> List[List[str]]:
 #     if not query.strip():
 #         return []
-#     q_emb = model.encode_query(query, normalize_embeddings=True, convert_to_numpy=True).astype("float32")
-#     scores, idxs = index.search(q_emb[None, :], top_k)
+#     ##################################
+#     # INSERT YOUR CODE HERE
+#     ##################################
 #     rows = []
 #     for score, i in zip(scores[0], idxs[0]):
 #         if i == -1: continue

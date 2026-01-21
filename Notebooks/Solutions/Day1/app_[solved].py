@@ -7,46 +7,50 @@ from sentence_transformers import SentenceTransformer
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-# # ---------- Paths ----------
-# APP_DIR    = os.path.dirname(__file__)
-# ASSETS_DIR = os.path.join(APP_DIR, "assets")
-# CORPUS_JSON = os.path.join(ASSETS_DIR, "corpus.json")
-# FAISS_MAIN  = os.path.join(ASSETS_DIR, "faiss_ip_768.index")
+# ---------- Paths ----------
+APP_DIR    = os.path.dirname(__file__)
+CORPUS_JSON = os.path.join(APP_DIR, "corpus.json")
+FAISS_MAIN  = os.path.join(APP_DIR, "faiss_ip_768.index")
 
-# # ---------- Load corpus ----------
-# with open(CORPUS_JSON, "r", encoding="utf-8") as f:
-#     corpus = json.load(f)  # [{"title", "text"}, ...]
+# ---------- Load corpus ----------
+with open(CORPUS_JSON, "r", encoding="utf-8") as f:
+    corpus = json.load(f)  # [{"title", "text"}, ...]
 
-# # ---------- Load FAISS index ----------
-# if not os.path.exists(FAISS_MAIN):
-#     raise FileNotFoundError(f"Missing FAISS index at {FAISS_MAIN}")
-# index = faiss.read_index(FAISS_MAIN)
+# ---------- Load FAISS index ----------
+if not os.path.exists(FAISS_MAIN):
+    raise FileNotFoundError(f"Missing FAISS index at {FAISS_MAIN}")
+index = faiss.read_index(FAISS_MAIN)
 
-# # Infer dimension from index
-# EMB_DIM = index.d
+# Infer dimension from index
+EMB_DIM = index.d
 
 # ---------- Model ----------
 model = SentenceTransformer("google/embeddinggemma-300m", token=HF_TOKEN)
 
-# ---------- Display Similarity ----------
+# ---------- 1. Display Similarity ----------
 def do_similarity(text_a: str, text_b: str) -> float:
-    a = model.encode_document([text_a], normalize_embeddings=True, convert_to_numpy=True)[0]
-    b = model.encode_document([text_b], normalize_embeddings=True, convert_to_numpy=True)[0]
-    return float(np.dot(a, b))
+    embeddings = model.encode(
+        [text_a, text_b],
+        normalize_embeddings=True,
+        convert_to_numpy=True
+    )
+    # The dot product of two normalized vectors is their cosine similarity.
+    similarity_score = np.dot(embeddings[0], embeddings[1])
+    return float(similarity_score)
 
-# # ---------- Semantic Search ----------
-# def do_search(query: str, top_k: int = 5) -> List[List[str]]:
-#     if not query.strip():
-#         return []
-#     q_emb = model.encode_query(query, normalize_embeddings=True, convert_to_numpy=True).astype("float32")
-#     scores, idxs = index.search(q_emb[None, :], top_k)
-#     rows = []
-#     for score, i in zip(scores[0], idxs[0]):
-#         if i == -1: continue
-#         item = corpus[i]
-#         snippet = item["text"][:380] + ("…" if len(item["text"]) > 380 else "")
-#         rows.append([f"{score:.4f}", item["title"], snippet])
-#     return rows
+# ---------- 2. Semantic Search ----------
+def do_search(query: str, top_k: int = 5) -> List[List[str]]:
+    if not query.strip():
+        return []
+    q_emb = model.encode_query(query, normalize_embeddings=True, convert_to_numpy=True).astype("float32")
+    scores, idxs = index.search(q_emb.reshape(1, -1), top_k)
+    rows = []
+    for score, i in zip(scores[0], idxs[0]):
+        if i == -1: continue
+        item = corpus[i]
+        snippet = item["text"][:380] + ("…" if len(item["text"]) > 380 else "")
+        rows.append([f"{score:.4f}", item["title"], snippet])
+    return rows
 
 # ---------- UI ----------
 with gr.Blocks(title="Embeddings Lab") as demo:
@@ -60,12 +64,12 @@ with gr.Blocks(title="Embeddings Lab") as demo:
             sim_out = gr.Number(label="Cosine similarity")
             sim_btn.click(lambda x, y: do_similarity(x, y), [a, b], sim_out)
     
-        # with gr.TabItem("Semantic Search"):
-        #     q = gr.Textbox(label="Query")
-        #     topk = gr.Slider(1, 20, value=5, step=1, label="Top-K")
-        #     run = gr.Button("Search")
-        #     out = gr.Dataframe(headers=["score", "title", "snippet"], wrap=True)
-        #     run.click(lambda query, k: do_search(query, int(k)), [q, topk], out)
+        with gr.TabItem("Semantic Search"):
+            q = gr.Textbox(label="Query")
+            topk = gr.Slider(1, 20, value=5, step=1, label="Top-K")
+            run = gr.Button("Search")
+            out = gr.Dataframe(headers=["score", "title", "snippet"], wrap=True)
+            run.click(lambda query, k: do_search(query, int(k)), [q, topk], out)
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860)
