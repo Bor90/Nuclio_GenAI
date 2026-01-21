@@ -59,14 +59,14 @@ with gr.Blocks(title="Embeddings Lab") as demo:
             b = gr.Textbox(lines=4, label="Text B")
             sim_btn = gr.Button("Compute")
             sim_out = gr.Number(label="Cosine similarity")
-            sim_btn.click(lambda x, y: do_similarity(x, y), [a, b], sim_out)
+            sim_btn.click(lambda x, y: do_similarity(x, y), [a, b], sim_out, api_name="similarity")
     
         # with gr.TabItem("Semantic Search"):
         #     q = gr.Textbox(label="Query")
         #     topk = gr.Slider(1, 20, value=5, step=1, label="Top-K")
         #     run = gr.Button("Search")
         #     out = gr.Dataframe(headers=["score", "title", "snippet"], wrap=True)
-        #     run.click(lambda query, k: do_search(query, int(k)), [q, topk], out)
+        #     run.click(lambda query, k: do_search(query, int(k)), [q, topk], out, api_name="search")
 
 if __name__ == "__main__":
     demo.launch(server_name="0.0.0.0", server_port=7860)
