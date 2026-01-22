@@ -1,8 +1,1 @@
 gradio
-pandas
-langchain==0.1.14
-langchain-community
-langchain-openai
-faiss-cpu
-python-dotenv
-openai
