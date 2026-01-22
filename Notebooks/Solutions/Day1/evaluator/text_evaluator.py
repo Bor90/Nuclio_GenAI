@@ -10,6 +10,7 @@ from typing import Dict, Tuple, List
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 import nltk
+nltk.download('punkt')
 
 # Download required NLTK data
 try:
